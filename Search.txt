@@ -15,39 +15,69 @@ export default class Search extends React.Component{
   searchTransaction= async() =>{
     var text = this.state.search;
     if(text.length !== 0){
-      console.log(text[0]);
       if(text[0] == "B"){
         const transactions = await db
         .collection("Transaction")
         .where("bookID","==",text)
-        .limit(10)
+        .limit(15)
         .get()
-        var items = []
+        var item = []
         transactions.docs.map((docs)=>{
-          items.push(docs.data())
-          this.setState({lastTransaction:items})
+          item.push(docs.data())
+          this.setState({lastTransaction:docs.data()})
         })
-        this.setState({allTransaction:items})
+        this.setState({allTransaction:item})
       }
       else if(text[0] == "S"){
         const transactions = await db
         .collection("Transaction")
         .where("studentID","==",text)
-        .limit(10)
+        .limit(15)
         .get()
-        var items = []
+        var item = []
         transactions.docs.map((docs)=>{
-          items.push(docs.data())
-          console.log("A",items);
-          this.setState({lastTransaction:items})
+          item.push(docs.data())
+          var data = docs.data();
+          this.setState({lastTransaction:data})
         })
-        this.setState({allTransaction:items})
+        this.setState({allTransaction:item})
       }
     }
   }
 
-  fetchMoreTransaction(){
-
+  fetchMoreTransaction = async () =>{
+    console.log("aswin",this.state.lastTransaction)
+    var text = this.state.search;
+    if(text.length !== 0){
+      if(text[0] == "B"){
+        const transactions = await db
+        .collection("Transaction")
+        .where("bookID","==",text)
+        .startAfter(this.state.lastTransaction)
+        .limit(15)
+        .get()
+        var item = []
+        transactions.docs.map((docs)=>{
+          item.push(docs.data())
+          this.setState({lastTransaction:docs.data()})
+        })
+        this.setState({allTransaction:item})
+      }
+      else if(text[0] == "S"){
+        const transactions = await db
+        .collection("Transaction")
+        .where("studentID","==",text)
+        .startAfter(this.state.lastTransaction)
+        .limit(15)
+        .get()
+        var item = []
+        transactions.docs.map((docs)=>{
+          item.push(docs.data())
+          this.setState({lastTransaction:docs.data()})
+        })
+        this.setState({allTransaction:item})
+      }
+    }
   }
 
   render(){
@@ -61,7 +91,6 @@ export default class Search extends React.Component{
         <TouchableOpacity onPress={this.searchTransaction} style={styles.searchButton}>
           <Text style={styles.buttonText}>SEARCH</Text>
         </TouchableOpacity>
-        {console.log("name1:"+this.state.allTransaction)}
       {/* <ScrollView>{this.state.allTransaction.map((docs)=>{
         return(
           <View style={styles.container}>
@@ -71,14 +100,14 @@ export default class Search extends React.Component{
           </View>
         )
       })}</ScrollView> */}
-      if(this.state.allTransaction.length){
         <FlatList 
         data={this.state.allTransaction}
-        renderItem={({items})=>(
+        renderItem={({item})=>(
           <View style={{borderBottomWidth:2}}>
-            <Text>{"TRANSACTION TYPE:"+items.type}</Text>
-            {/* <Text>TRANSACTION BOOKID:{docs.bookID}</Text>
-            <Text>TRANSACTION STUDENTID:{docs.studentID}</Text> */}
+             <Text>{"TRANSACTION TYPE:"+item.type}</Text> 
+            <Text>TRANSACTION BOOKID:{item.bookID}</Text>
+            <Text>TRANSACTION STUDENTID:{item.studentID}</Text>
+            {/* <Text>TRANSACTION DATE:{item.date.seconds}</Text> */}
           </View>
         )}
         keyExtractor={(doc,index)=>index.toString()}
@@ -86,7 +115,6 @@ export default class Search extends React.Component{
         onEndReachedThreshold={0.7}
         >
         </FlatList>
-      }
       </View>
     );
   }
